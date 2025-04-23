@@ -40,69 +40,10 @@ fi
 
 # Verify flash-attn is working
 echo "Verifying flash-attn installation..."
-python -c "
-import torch
-try:
-    from flash_attn import flash_attn_func
-    print('Flash Attention is installed correctly')
-    
-    # Create sample tensors to test flash attention - using fp16
-    batch_size, seq_len, n_heads, d_head = 2, 1024, 8, 64
-    q = torch.randn(batch_size, seq_len, n_heads, d_head, device='cuda', dtype=torch.float16)
-    k = torch.randn(batch_size, seq_len, n_heads, d_head, device='cuda', dtype=torch.float16)
-    v = torch.randn(batch_size, seq_len, n_heads, d_head, device='cuda', dtype=torch.float16)
-    
-    # Run flash attention
-    out = flash_attn_func(q, k, v)
-    print(f'Flash Attention test successful! Output shape: {out.shape}')
-    print(f'Flash Attention version information: {flash_attn_func.__module__}')
-except ImportError as e:
-    print(f'Error importing flash_attn: {e}')
-    exit(1)
-except Exception as e:
-    print(f'Error running flash_attn test: {e}')
-    exit(1)
-"
+python flash_attn_test.py
 
+# Run the torchrun test with 2 GPUs
 echo "Running torchrun test with 2 GPUs..."
-# Create a simple test script
-cat > /tmp/torch_test.py << 'EOL'
-import os
-import torch
-import torch.distributed as dist
-
-def main():
-    local_rank = int(os.environ.get("LOCAL_RANK", 0))
-    rank = int(os.environ.get("RANK", 0))
-    world_size = int(os.environ.get("WORLD_SIZE", 1))
-    
-    # Initialize the process group
-    dist.init_process_group("nccl")
-    
-    # Get device info
-    device = torch.device(f"cuda:{local_rank}")
-    torch.cuda.set_device(device)
-    
-    # Get some basic info
-    print(f"Running on node: {os.uname().nodename}")
-    print(f"Rank: {rank}, Local Rank: {local_rank}, World Size: {world_size}")
-    print(f"Device: {device}, Device name: {torch.cuda.get_device_name(local_rank)}")
-    
-    # Create a tensor on the device
-    x = torch.randn(10, 10).to(device)
-    print(f"Tensor created on {device}: shape={x.shape}")
-    
-    # Synchronize all processes
-    dist.barrier()
-    
-    if rank == 0:
-        print("\nTorchrun with 2 GPUs is working correctly!")
-
-if __name__ == "__main__":
-    main()
-EOL
-
-# Run the test with torchrun
-torchrun --nproc_per_node=2 /tmp/torch_test.py
+torchrun --nproc_per_node=2 torch_test.py
 
 echo "Test completed successfully!" 
