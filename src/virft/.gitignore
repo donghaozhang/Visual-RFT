@@ -176,3 +176,11 @@ wandb/
 scripts/
 checkpoints/
 .vscode/
+wandb/*
+share_data/
+share_models/
+share_data/base65cate_6k_think/
+share_data/base65cate_6k_think/
+share_data/base65cate_6k_think/
+share_data/base65cate_6k_think/
+*wandb/*

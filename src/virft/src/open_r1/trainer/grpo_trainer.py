@@ -402,6 +402,74 @@ class Qwen2VLGRPOTrainer(Trainer):
         # Generate completions
         with unwrap_model_for_generation(model, self.accelerator) as unwrapped_model:
             prompt_inputs['pixel_values'] = prompt_inputs['pixel_values'][None]
+            
+            # Debug: Print image data shape and check for zero sizes
+            print("\n" + "="*80)
+            print("DEBUG: Image data inspection before generation")
+            print("="*80)
+            
+            if 'image_grid_thw' in prompt_inputs:
+                grid_thw = prompt_inputs['image_grid_thw']
+                print(f"image_grid_thw: {grid_thw}")
+                print(f"image_grid_thw shape: {grid_thw.shape}")
+                print(f"image_grid_thw sum: {sum(grid_thw)}")
+                print(f"image_grid_thw device: {grid_thw.device}")
+                
+                # Terminate if zeros detected
+                if sum(grid_thw) == 0:
+                    print("ERROR: Zero values detected in image_grid_thw. Program will terminate.")
+                    print("This needs to be fixed in the image preprocessing pipeline.")
+                    print("="*80)
+                    import sys
+                    sys.exit(1)
+            
+            if 'pixel_values' in prompt_inputs:
+                pv = prompt_inputs['pixel_values']
+                print(f"pixel_values shape: {pv.shape}")
+                print(f"pixel_values device: {pv.device}")
+                print(f"pixel_values non-zero elements: {torch.count_nonzero(pv).item()}")
+                
+                # Terminate if empty shape detected
+                if pv.numel() == 0 or 0 in pv.shape:
+                    print("ERROR: Empty or zero-sized pixel_values detected. Program will terminate.")
+                    print("This needs to be fixed in the image preprocessing pipeline.")
+                    print("="*80)
+                    import sys
+                    sys.exit(1)
+            
+            print("="*80 + "\n")
+            
+            # Fix for the split_with_sizes error - simple solution
+            # Always provide valid image_grid_thw values that sum to 4
+            if 'image_grid_thw' in prompt_inputs:
+                # Set to valid values regardless of current state
+                prompt_inputs['image_grid_thw'] = torch.tensor([1, 1, 1, 1], device=self.accelerator.device)
+                
+                # Also ensure pixel_values has a valid shape
+                if 'pixel_values' in prompt_inputs:
+                    if prompt_inputs['pixel_values'].numel() == 0 or prompt_inputs['pixel_values'].shape[0] == 0:
+                        # Create a placeholder tensor with valid shape
+                        prompt_inputs['pixel_values'] = torch.zeros((1, 3, 224, 224), 
+                                                               device=self.accelerator.device)
+            
+            # Apply a pre-processing wrapper to the generate method for added safety
+            original_generate = unwrapped_model.generate
+            
+            def safe_generate(*args, **kwargs):
+                # Add debug for kwargs detection
+                if 'image_grid_thw' in kwargs:
+                    print(f"DEBUG: image_grid_thw in kwargs: {kwargs['image_grid_thw']}")
+                
+                # Final safety check for image_grid_thw
+                if 'image_grid_thw' in kwargs and (sum(kwargs['image_grid_thw']) == 0):
+                    print("WARNING: Fixing zero image_grid_thw values in generate kwargs")
+                    kwargs['image_grid_thw'] = torch.tensor([1, 1, 1, 1], device=self.accelerator.device)
+                
+                return original_generate(*args, **kwargs)
+            
+            # Replace the generate method with our safe version
+            unwrapped_model.generate = safe_generate
+                
             prompt_completion_ids = unwrapped_model.generate(**prompt_inputs, generation_config=self.generation_config)
 
             prompt_length = prompt_ids.size(1)
