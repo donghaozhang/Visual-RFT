@@ -5,6 +5,9 @@ set -e  # Exit on error
 # source /home/ubuntu/petertest/miniconda/bin/activate
 # conda create -n rftv2 python=3.10 -y
 # conda activate rftv3
+# pip install vllm==0.7.2
+# bash verify_vllm.sh
+# bash verify_torchrun.sh
 # pip3 install torch torchvision torchaudio
 echo "Creating RFTV6 conda environment from specification..."
 conda env create -f conda_environment.yml

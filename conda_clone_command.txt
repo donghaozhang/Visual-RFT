@@ -1,0 +1,5 @@
+# Direct command to clone the rftv3 conda environment to rftv3_backup:
+conda create --name rftv3_backup --clone rftv3 -y
+
+# After cloning, you may want to reinstall flash-attn with the correct flag:
+conda run -n rftv3_backup pip uninstall -y flash-attn && conda run -n rftv3_backup pip install flash-attn==2.5.5 --no-build-isolation 

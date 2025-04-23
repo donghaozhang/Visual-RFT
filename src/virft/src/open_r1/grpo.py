@@ -379,10 +379,10 @@ def main(script_args, training_args, model_args):
     reward_funcs = [reward_funcs_registry[func] for func in script_args.reward_funcs]
 
     # Load the dataset from huggingface
-    # dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
+    dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
     # Load the dataset from local disk
     from datasets import DatasetDict
-    dataset = DatasetDict.load_from_disk(script_args.dataset_name)
+    # dataset = DatasetDict.load_from_disk(script_args.dataset_name)
 
 
     # Format into conversation
