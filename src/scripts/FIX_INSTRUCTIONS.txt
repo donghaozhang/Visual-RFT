@@ -1,31 +1,51 @@
 Make sure you're using the rftv3 conda environment before running this script.
 
-The error 'RuntimeError: split_with_sizes expects split_sizes to sum exactly to 4 (input tensor's size at dimension 0), but got split_sizes=[0, 0, 0, 0]' is occurring because:
+The error 'RuntimeError: split_with_sizes expects split_sizes to sum exactly to 4 (input tensor's size at dimension 0), but got split_sizes=[0, 0, 0, 0]' occurs in the Qwen2-VL model when processing images during training. We've found two related issues:
 
-1. In the Qwen2-VL model, when processing images during generation
-2. The model tries to split a tensor with all zeros [0, 0, 0, 0]
-3. This causes torch.split() to fail because you can't split a tensor into parts that sum to zero
+1. The error happens when image_grid_thw contains all zeros [0, 0, 0, 0], causing torch.split() to fail
+2. This is triggered by tiny or invalid images that fail Qwen2-VL's minimum size requirements (factor of 28)
 
-To fix this error:
+To fix this issue:
 
 1. Locate file: src/virft/src/open_r1/trainer/grpo_trainer.py
-2. Look for line 405-407 where unwrapped_model.generate() is called
-3. Add this code to fix the inputs and wrap the generate method:
+2. Look for where images are processed before calling the model's generate method
+3. Add this code to preprocess and validate images:
 
 ```python
-# Fix for the split_with_sizes error - simple solution
-# Always provide valid image_grid_thw values that sum to 4
-if 'image_grid_thw' in prompt_inputs:
-    # Set to valid values regardless of current state
-    prompt_inputs['image_grid_thw'] = torch.tensor([1, 1, 1, 1], device=self.accelerator.device)
-    
-    # Also ensure pixel_values has a valid shape
-    if 'pixel_values' in prompt_inputs:
-        if prompt_inputs['pixel_values'].numel() == 0 or prompt_inputs['pixel_values'].shape[0] == 0:
-            # Create a placeholder tensor with valid shape
-            prompt_inputs['pixel_values'] = torch.zeros((1, 3, 224, 224), 
-                                                   device=self.accelerator.device)
+# Import PIL at the top of the file
+from PIL import Image
 
+# And in the compute_loss method, add this image preprocessing:
+# Fix images before processing - ensure minimum size requirements
+MIN_IMAGE_SIZE = 224  # This ensures divisibility by factor 28 required by Qwen2-VL
+valid_images = []
+
+for img in images:
+    if img is None:
+        # Create a valid placeholder image of proper size
+        placeholder = Image.new('RGB', (MIN_IMAGE_SIZE, MIN_IMAGE_SIZE), color='gray')
+        valid_images.append(placeholder)
+    elif isinstance(img, Image.Image) and (img.width < 28 or img.height < 28):
+        # Resize tiny images to minimum valid size
+        print(f"WARNING: Resizing tiny image from {img.width}x{img.height} to {MIN_IMAGE_SIZE}x{MIN_IMAGE_SIZE}")
+        placeholder = Image.new('RGB', (MIN_IMAGE_SIZE, MIN_IMAGE_SIZE), color='gray')
+        # Paste the original image in the center if possible
+        if img.width > 0 and img.height > 0:
+            paste_x = (MIN_IMAGE_SIZE - img.width) // 2
+            paste_y = (MIN_IMAGE_SIZE - img.height) // 2
+            placeholder.paste(img, (paste_x, paste_y))
+        valid_images.append(placeholder)
+    else:
+        valid_images.append(img)
+
+# Use the fixed images
+images = valid_images
+```
+
+4. Additionally, add a safety check before calling generate:
+
+```python
+# In the generate completions section, add:
 # Apply a pre-processing wrapper to the generate method for added safety
 original_generate = unwrapped_model.generate
 
@@ -39,29 +59,31 @@ def safe_generate(*args, **kwargs):
 unwrapped_model.generate = safe_generate
 ```
 
-4. This fix:
-   - Fixes the input values directly by ensuring image_grid_thw always has valid values
-   - Adds an extra safety layer by wrapping the generate method to catch any issues
-   - Works without needing to access internal model functions
-   - Handles both the tensor value issues and shape issues
+This fix addresses the issue in two ways:
+
+1. Prevents the error by ensuring all images meet the minimum size requirements
+2. Provides a safety net that fixes any zero-value tensors before they cause the error
+3. Handles both None images and tiny images that would otherwise fail processing
+
+DETAILED TECHNICAL EXPLANATION:
+
+The error occurs because:
+1. Qwen2-VL requires images to have dimensions that are divisible by a factor of 28
+2. When tiny images (like 1x1 pixels) are processed, the image processor fails with:
+   `ValueError: height:1 and width:3 must be larger than factor:28`
+3. This error can lead to empty or zero-filled tensors in image_grid_thw
+4. Later in the model's code, it tries to split a tensor using these zero values, causing the error:
+   `RuntimeError: split_with_sizes expects split_sizes to sum exactly to 4 (input tensor's size at dimension 0), but got split_sizes=[0, 0, 0, 0]`
+
+Our solution handles this comprehensively by:
+1. Validating and fixing images BEFORE they're processed
+2. Creating proper-sized placeholder images for invalid inputs
+3. Adding an extra safety check that fixes any remaining issues
+4. Providing helpful warning messages about resizing operations
 
 For proper debugging, run this script from the Visual-RFT directory with the rftv3 conda environment active:
 ```
 cd new_start/Visual-RFT
 conda activate rftv3
 python ../../debug.py
-```
-
-DETAILED TECHNICAL EXPLANATION:
-
-The error is happening in the Qwen2-VL model's internal code when it processes images during generation:
-
-1. At some point inside the model's generation code, it calls torch.split on image_grid_thw
-2. When image_grid_thw contains all zeros [0, 0, 0, 0], the split operation fails
-3. The error occurs because you can't split a tensor into segments of size 0, 0, 0, and 0
-
-Our solution:
-1. Directly fixes the problematic inputs by ensuring image_grid_thw always has valid values
-2. Adds an extra safety layer by wrapping the generate method to catch any issues
-3. Works without relying on knowledge of the model's internal structure
-4. Ensures tensors are on the correct device for distributed training 
+``` 

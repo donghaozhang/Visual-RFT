@@ -47,6 +47,7 @@ from trl.trainer.grpo_config import GRPOConfig
 from trl.trainer.utils import generate_model_card, get_comet_experiment_url
 
 import copy
+from PIL import Image
 
 
 if is_peft_available():
@@ -380,6 +381,33 @@ class Qwen2VLGRPOTrainer(Trainer):
         prompts = [x["prompt"] for x in inputs]
         prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
         images = [x["image"] for x in inputs]
+        
+        # Fix images before processing - ensure minimum size requirements
+        MIN_IMAGE_SIZE = 224  # This ensures divisibility by factor 28 required by Qwen2-VL
+        valid_images = []
+        
+        for img in images:
+            if img is None:
+                # Create a valid placeholder image of proper size
+                placeholder = Image.new('RGB', (MIN_IMAGE_SIZE, MIN_IMAGE_SIZE), color='gray')
+                valid_images.append(placeholder)
+            elif isinstance(img, Image.Image) and (img.width < 28 or img.height < 28):
+                # Resize tiny images to minimum valid size
+                print(f"WARNING: Resizing tiny image from {img.width}x{img.height} to {MIN_IMAGE_SIZE}x{MIN_IMAGE_SIZE}")
+                placeholder = Image.new('RGB', (MIN_IMAGE_SIZE, MIN_IMAGE_SIZE), color='gray')
+                # Paste the original image in the center if possible
+                if img.width > 0 and img.height > 0:
+                    paste_x = (MIN_IMAGE_SIZE - img.width) // 2
+                    paste_y = (MIN_IMAGE_SIZE - img.height) // 2
+                    placeholder.paste(img, (paste_x, paste_y))
+                valid_images.append(placeholder)
+            else:
+                valid_images.append(img)
+        
+        # Use the fixed images
+        images = valid_images
+        
+        # Process the text and images
         prompt_inputs = self.processing_class(
             text=prompts_text,
             images=images,
