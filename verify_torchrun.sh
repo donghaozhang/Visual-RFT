@@ -8,10 +8,10 @@ set -e
 
 echo "Activating RFT conda environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
-conda activate RFT
+conda activate RFTV5
 
 # Check if the environment was activated properly
-if [[ $CONDA_DEFAULT_ENV != "RFT" ]]; then
+if [[ $CONDA_DEFAULT_ENV != "RFTV5" ]]; then
   echo "Error: Failed to activate RFT conda environment"
   exit 1
 fi
