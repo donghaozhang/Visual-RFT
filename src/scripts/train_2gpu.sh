@@ -2,18 +2,18 @@
 # Training script optimized for 2 NVIDIA RTX A6000 GPUs (48GB each)
 set -e  # Exit on error
 
-# Ensure conda is available and activate RFTV3 environment
-echo "Activating RFTV3 conda environment..."
+# Ensure conda is available and activate RFTV4 environment
+echo "Activating RFTV4 conda environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
-conda activate RFTV3
+conda activate RFTV4
 
 # Check if the environment was activated properly
-if [[ $CONDA_DEFAULT_ENV != "RFTV3" ]]; then
-  echo "Error: Failed to activate RFTV3 conda environment"
+if [[ $CONDA_DEFAULT_ENV != "RFTV4" ]]; then
+  echo "Error: Failed to activate RFTV4 conda environment"
   exit 1
 fi
 
-echo "Using conda environment: RFTV3"
+echo "Using conda environment: RFTV4"
 python -c "import sys; print(f'Python interpreter: {sys.executable}')"
 python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU count: {torch.cuda.device_count()}')"

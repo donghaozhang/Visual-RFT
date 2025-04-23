@@ -1,4 +1,4 @@
-name: RFTV4
+name: RFTV5
 channels:
   - pytorch
   - nvidia
@@ -34,7 +34,7 @@ dependencies:
     - safetensors==0.5.3
     - tensorboardx==2.6.2.2
     - tqdm==4.67.1
-    - transformers==4.49.0.dev0
+    - transformers==4.49.0
     - triton==3.1.0
     - vllm==0.7.2
     - wandb==0.18.3

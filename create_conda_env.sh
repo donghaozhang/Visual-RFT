@@ -1,14 +1,14 @@
 #!/bin/bash
-# Script to create and configure RFTV3 conda environment
+# Script to create and configure RFTV4 conda environment
 
 set -e  # Exit on error
 
-echo "Creating RFTV3 conda environment from specification..."
+echo "Creating RFTV4 conda environment from specification..."
 conda env create -f conda_environment.yml
 
-echo "Activating RFTV3 conda environment..."
+echo "Activating RFTV4 conda environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
-conda activate RFTV3
+conda activate RFTV4
 
 # Verify the environment
 echo "Verifying conda environment..."
@@ -37,4 +37,4 @@ except Exception as e:
     print(f'Error with Flash Attention: {e}')
 "
 
-echo "RFTV3 environment setup completed!" 
+echo "RFTV4 environment setup completed!" 
