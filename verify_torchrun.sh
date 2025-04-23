@@ -27,6 +27,8 @@ echo "Reinstalling compatible Flash Attention version..."
 # pip install numpy==1.24.3
 # pip install torch==2.0.1 # Install a compatible PyTorch version
 # pip install flash-attn==2.3.0 --no-build-isolation # Install a compatible Flash Attention version
+# pip install datasets
+# pip install transformers
 
 echo "Checking CUDA availability..."
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA device count: {torch.cuda.device_count()}')"

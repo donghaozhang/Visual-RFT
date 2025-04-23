@@ -1,0 +1,41 @@
+name: RFTV4
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip=25.0
+  - bzip2=1.0.8
+  - ca-certificates
+  - ncurses=6.4
+  - openssl=3.0.16
+  - sqlite=3.45.3
+  - tk=8.6.14
+  - xz=5.6.4
+  - zlib=1.2.13
+  - pytorch::pytorch=2.5.1
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - pytorch::pytorch-cuda=12.1
+  - pip:
+    - accelerate==1.6.0
+    - datasets==3.5.0
+    - deepspeed==0.15.4
+    - einops==0.8.1
+    - flash-attn==2.7.4.post1
+    - fsspec==2024.12.0
+    - huggingface-hub==0.30.2
+    - numpy==1.26.4
+    - pillow==11.2.1
+    - pyyaml==6.0.2
+    - qwen-vl-utils==0.0.10
+    - safetensors==0.5.3
+    - tensorboardx==2.6.2.2
+    - tqdm==4.67.1
+    - transformers==4.49.0.dev0
+    - triton==3.1.0
+    - vllm==0.7.2
+    - wandb==0.18.3
+    - xformers==0.0.28.post3 
