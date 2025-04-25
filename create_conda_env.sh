@@ -9,6 +9,13 @@ set -e  # Exit on error
 # bash verify_vllm.sh
 # bash verify_torchrun.sh
 # pip3 install torch torchvision torchaudio
+# https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct/tree/main
+# sudo apt-get update && sudo apt-get install -y git-lfs
+# git lfs install
+# git clone https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct
+# cd Qwen2-VL-2B-Instruct
+# git lfs pull
+
 echo "Creating RFTV6 conda environment from specification..."
 conda env create -f conda_environment.yml
 

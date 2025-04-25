@@ -3,35 +3,36 @@
 set -e  # Exit on error
 
 # Ensure conda is available and activate RFTV4 environment
-echo "Activating rftv3 conda environment..."
+echo "Activating rft conda environment..."
 source $(conda info --base)/etc/profile.d/conda.sh
-conda activate rftv3
+conda activate rft
 
 # Check if the environment was activated properly
-if [[ $CONDA_DEFAULT_ENV != "rftv3" ]]; then
-  echo "Error: Failed to activate rftv3 conda environment"
+if [[ $CONDA_DEFAULT_ENV != "rft" ]]; then
+  echo "Error: Failed to activate rft conda environment"
   exit 1
 fi
 
-echo "Using conda environment: rftv3"
+echo "Using conda environment: rft"
 python -c "import sys; print(f'Python interpreter: {sys.executable}')"
 python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU count: {torch.cuda.device_count()}')"
-
+export HF_HOME=/mnt/data/jiaxing.zjx/cache/huggingface/
+export HF_DATASETS_CACHE=/home/ubuntu/visualrft/Visual-RFT/hf_cache
 export DEBUG_MODE="true"
 export LOG_PATH="./debug_log_2b_GRPO_2gpu.txt"
 
 # Dataset and model paths - update these as needed
-export DATA_PATH=./share_data/base65cate_6k_think
+export DATA_PATH=./share_data/ViRFT_COCO_base65
 export CKPT_PATH=./share_models/Qwen2-VL-2B-Instruct
 export SAVE_PATH=./share_models/Qwen2-VL-2B-Instruct_GRPO_2gpu
 
 # Make sure the output directory exists
 mkdir -p ${SAVE_PATH}
 
-echo "Starting training with 2 GPUs..."
+echo "Starting training with 1 GPU..."
 # Run training with 2 GPUs
-torchrun --nproc_per_node=2 \
+torchrun --nproc_per_node=1 \
     --nnodes=1 \
     --node_rank=0 \
     --master_addr=127.0.0.1 \
