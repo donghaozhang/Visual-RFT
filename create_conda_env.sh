@@ -16,6 +16,57 @@ set -e  # Exit on error
 # cd Qwen2-VL-2B-Instruct
 # git lfs pull
 
+# (rft) ubuntu@192-222-52-142:~/visualrft/rft_nochange/Visual-RFT$ history
+#     1  ls
+#     2  git clone https://github.com/donghaozhang/Visual-RFT.git
+#     3  ls
+#     4  conda create -n rft python=3.10 -y
+#     5  conda activate rft
+#     6  cd Visual-RFT/
+#     7  pip install vllm==0.7.2
+#     8  bash verify_vllm.sh 
+#     9  pip install -e ".[dev]"
+#    10  ls
+#    11  pip install -e ".[dev]"
+#    12  bash setup.sh 
+#    13  pip install wandb
+#    14  pip install tensorboardx
+#    15  pip install qwen_vl_utils
+#    16  pip install flash-attn --no-build-isolation
+#    17  cd share_models/
+#    18  pwd
+#    19  cd ..
+#    20  mkdir share_data
+#    21  cd share_data/
+#    22  git clone https://huggingface.co/datasets/laolao77/ViRFT_COCO_base65
+#    23  cd ..
+#    24  cd src
+#    25  cd scripts/
+#    26  cd ..
+#    27  cd src/scripts/train_2gpu.sh
+#    28  ls
+#    29  cd src/
+#    30  cd scripts/
+#    31  ls
+#    32  cd ..
+#    33  bash src/scripts/train_2gpu.sh 
+#    34  pwd
+#    35  bash src/scripts/train_2gpu.sh 
+#    36  cd ..
+#    37  mkdir rft_nochange
+#    38  cd rft_nochange/
+#    39  git clone https://github.com/Liuziyu77/Visual-RFT.git
+#    40  cd Visual-RFT/
+#    41  ls
+#    42  cd src
+#    43  ls
+#    44  cd scripts/
+#    45  ls
+#    46  bash start.sh 
+#    47  cd ..
+#    48  bash src/scripts/start.sh 
+#    49  history
+
 echo "Creating RFTV6 conda environment from specification..."
 conda env create -f conda_environment.yml
 
